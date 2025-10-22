@@ -334,4 +334,75 @@ cat > app/src/main/java/com/example/quotewidget/QuoteWidgetProvider.kt <<'EOF'
           cat > app/src/main/res/values/strings.xml <<'EOF'
           <resources>
               <string name="app_name">QuoteWidget</string>
-          </resour
+          </resources>
+          EOF
+
+          cat > app/src/main/res/values/colors.xml <<'EOF'
+          <resources>
+              <color name="white">#FFFFFFFF</color>
+              <color name="black">#FF000000</color>
+              <color name="widget_bg">#FFF7F7F7</color>
+          </resources>
+          EOF
+
+          cat > app/src/main/res/values/styles.xml <<'EOF'
+          <resources>
+              <style name="Theme.QuoteWidget" parent="Theme.Material3.Light.NoActionBar"/>
+          </resources>
+          EOF
+
+          cat > app/src/main/res/drawable/widget_bg.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shape="rectangle">
+              <corners android:radius="12dp"/>
+              <solid android:color="@color/widget_bg"/>
+          </shape>
+          EOF
+
+          cat > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@android:color/white"/>
+              <foreground android:drawable="@android:color/black"/>
+          </adaptive-icon>
+          EOF
+
+          cat > app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@android:color/white"/>
+              <foreground android:drawable="@android:color/black"/>
+          </adaptive-icon>
+          EOF
+# 2) 安装 JDK & Android SDK & Build-Tools
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK packages
+        run: |
+          sdkmanager --install "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+          yes | sdkmanager --licenses
+
+      # 3) 生成 Gradle Wrapper 并用它构建
+      - name: Install Gradle and generate wrapper
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 8.9
+      - name: Generate Gradle wrapper
+        run: gradle wrapper --gradle-version 8.9
+      - name: Build Debug APK
+        run: ./gradlew --no-daemon assembleDebug
+
+      # 4) 上传 APK
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
